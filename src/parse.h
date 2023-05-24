@@ -27,6 +27,7 @@
 
 #include "sxhkd.h"
 
+#define USE_KEYCODE          '$'
 #define RELEASE_PREFIX       '@'
 #define REPLAY_PREFIX        '~'
 #define START_COMMENT        '#'
@@ -60,6 +61,7 @@ chunk_t *extract_chunks(char *s);
 chunk_t *make_chunk(void);
 void destroy_chunks(chunk_t *chunk);
 bool parse_chain(char *string, chain_t *chain);
+bool parse_keycode(char *name, xcb_keycode_t *keycode);
 bool parse_keysym(char *name, xcb_keysym_t *keysym);
 bool parse_button(char *name, xcb_button_t *butidx);
 bool parse_modifier(char *name, uint16_t *modfield);

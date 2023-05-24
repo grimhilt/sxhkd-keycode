@@ -132,51 +132,83 @@ bool chains_interfere(chain_t* a, chain_t* b) {
 	return result;
 }
 
-chord_t *make_chord(xcb_keysym_t keysym, xcb_button_t button, uint16_t modfield, uint8_t event_type, bool replay_event, bool lock_chain)
+chord_t *make_chord(xcb_keysym_t keysym, xcb_button_t button, xcb_keycode_t keycode, uint16_t modfield, uint8_t event_type, bool replay_event, bool lock_chain)
 {
 	chord_t *chord;
 	if (button == XCB_NONE) {
 		chord_t *prev = NULL;
 		chord_t *orig = NULL;
-		xcb_keycode_t *keycodes = keycodes_from_keysym(keysym);
-		if (keycodes != NULL) {
-			for (xcb_keycode_t *kc = keycodes; *kc != XCB_NO_SYMBOL; kc++) {
-				xcb_keysym_t natural_keysym = xcb_key_symbols_get_keysym(symbols, *kc, 0);
-				for (unsigned char col = 0; col < KEYSYMS_PER_KEYCODE; col++) {
-					xcb_keysym_t ks = xcb_key_symbols_get_keysym(symbols, *kc, col);
-					if (ks == keysym) {
-						uint16_t implicit_modfield = (col & 1 ? XCB_MOD_MASK_SHIFT : 0) | (col & 2 ? modfield_from_keysym(Mode_switch) : 0);
-						uint16_t explicit_modfield = modfield | implicit_modfield;
-						chord = malloc(sizeof(chord_t));
-						bool unique = true;
-						for (chord_t *c = orig; unique && c != NULL; c = c->more)
-							if (c->modfield == explicit_modfield && c->keysym == natural_keysym)
-								unique = false;
-						if (!unique) {
-							free(chord);
+		if (keycode == 0)
+		{
+			xcb_keycode_t *keycodes = keycodes_from_keysym(keysym);
+			if (keycodes != NULL) {
+				for (xcb_keycode_t *kc = keycodes; *kc != XCB_NO_SYMBOL; kc++) {
+					xcb_keysym_t natural_keysym = xcb_key_symbols_get_keysym(symbols, *kc, 0);
+					for (unsigned char col = 0; col < KEYSYMS_PER_KEYCODE; col++) {
+						xcb_keysym_t ks = xcb_key_symbols_get_keysym(symbols, *kc, col);
+						if (ks == keysym) {
+							uint16_t implicit_modfield = (col & 1 ? XCB_MOD_MASK_SHIFT : 0) | (col & 2 ? modfield_from_keysym(Mode_switch) : 0);
+							uint16_t explicit_modfield = modfield | implicit_modfield;
+							chord = malloc(sizeof(chord_t));
+							bool unique = true;
+							for (chord_t *c = orig; unique && c != NULL; c = c->more)
+								if (c->modfield == explicit_modfield && c->keysym == natural_keysym)
+									unique = false;
+							if (!unique) {
+								free(chord);
+								break;
+							}
+							chord->keysym = natural_keysym;
+							chord->button = button;
+							chord->modfield = explicit_modfield;
+							chord->next = chord->more = NULL;
+							chord->event_type = event_type;
+							chord->replay_event = replay_event;
+							chord->lock_chain = lock_chain;
+							if (prev != NULL)
+								prev->more = chord;
+							else
+								orig = chord;
+							prev = chord;
+							PRINTF("key chord %u %u\n", natural_keysym, explicit_modfield);
 							break;
 						}
-						chord->keysym = natural_keysym;
-						chord->button = button;
-						chord->modfield = explicit_modfield;
-						chord->next = chord->more = NULL;
-						chord->event_type = event_type;
-						chord->replay_event = replay_event;
-						chord->lock_chain = lock_chain;
-						if (prev != NULL)
-							prev->more = chord;
-						else
-							orig = chord;
-						prev = chord;
-						PRINTF("key chord %u %u\n", natural_keysym, explicit_modfield);
-						break;
 					}
 				}
+			} else {
+				warn("No keycodes found for keysym %u.\n", keysym);
 			}
+			free(keycodes);
 		} else {
-			warn("No keycodes found for keysym %u.\n", keysym);
+			xcb_keysym_t natural_keysym = xcb_key_symbols_get_keysym(symbols, keycode, 0);
+			for (unsigned char col = 0; col < KEYSYMS_PER_KEYCODE; col++) {
+				uint16_t implicit_modfield = (col & 1 ? XCB_MOD_MASK_SHIFT : 0) | (col & 2 ? modfield_from_keysym(Mode_switch) : 0);
+				uint16_t explicit_modfield = modfield | implicit_modfield;
+				chord = malloc(sizeof(chord_t));
+				bool unique = true;
+				for (chord_t *c = orig; unique && c != NULL; c = c->more)
+					if (c->modfield == explicit_modfield && c->keysym == natural_keysym)
+						unique = false;
+				if (!unique) {
+					free(chord);
+					break;
+				}
+				chord->keysym = natural_keysym;
+				chord->button = button;
+				chord->modfield = explicit_modfield;
+				chord->next = chord->more = NULL;
+				chord->event_type = event_type;
+				chord->replay_event = replay_event;
+				chord->lock_chain = lock_chain;
+				if (prev != NULL)
+					prev->more = chord;
+				else
+					orig = chord;
+				prev = chord;
+				PRINTF("key chord %u %u\n", natural_keysym, explicit_modfield);
+				break;
+			}
 		}
-		free(keycodes);
 		chord = orig;
 	} else {
 		chord = malloc(sizeof(chord_t));

@@ -2660,10 +2660,12 @@ bool parse_chain(char *string, chain_t *chain)
 	char ignored[MAXLEN] = {0};
 	xcb_keysym_t keysym = XCB_NO_SYMBOL;
 	xcb_button_t button = XCB_NONE;
+	xcb_keycode_t keycode = 0;
 	uint16_t modfield = 0;
 	uint8_t event_type = XCB_KEY_PRESS;
 	bool replay_event = false;
 	bool lock_chain = false;
+	bool use_keycode = false;
 	char *outer_advance;
 	char *inner_advance;
 	for (outer_advance = get_token(chord, ignored, string, LNK_SEP); chord[0] != '\0'; outer_advance = get_token(chord, ignored, outer_advance, LNK_SEP)) {
@@ -2677,8 +2679,12 @@ bool parse_chain(char *string, chain_t *chain)
 				event_type = XCB_KEY_RELEASE;
 				offset++;
 			}
+			if (name[offset] == USE_KEYCODE) {
+				use_keycode = true;
+				offset++;
+			}
 			char *nm = name + offset;
-			if (!parse_modifier(nm, &modfield) && !parse_keysym(nm, &keysym) && !parse_button(nm, &button)) {
+			if (!(use_keycode && parse_keycode(nm, &keycode)) && !parse_modifier(nm, &modfield) && !parse_keysym(nm, &keysym) && !parse_button(nm, &button)) {
 				warn("Unknown keysym name: '%s'.\n", nm);
 				return false;
 			}
@@ -2687,7 +2693,7 @@ bool parse_chain(char *string, chain_t *chain)
 			lock_chain = true;
 		if (button != XCB_NONE)
 			event_type = key_to_button(event_type);
-		chord_t *c = make_chord(keysym, button, modfield, event_type, replay_event, lock_chain);
+		chord_t *c = make_chord(keysym, button, keycode, modfield, event_type, replay_event, lock_chain);
 		if (c == NULL) {
 			return false;
 		}
@@ -2697,12 +2703,25 @@ bool parse_chain(char *string, chain_t *chain)
 		}
 		keysym = XCB_NO_SYMBOL;
 		button = XCB_NONE;
+		keycode = 0;
 		modfield = 0;
 		event_type = XCB_KEY_PRESS;
 		replay_event = false;
 		lock_chain = false;
+		use_keycode = false;
 	}
 	return true;
+}
+
+bool parse_keycode(char *name, xcb_keycode_t *keycode)
+{
+	char *end;
+	const long i = strtol(name, &end, 10);
+	if (i != 0 && i > 0 && i <= 255) {
+		*keycode = i;
+		return true;
+	}
+	return false;
 }
 
 bool parse_keysym(char *name, xcb_keysym_t *keysym)

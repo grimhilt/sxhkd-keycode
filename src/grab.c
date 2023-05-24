@@ -75,6 +75,7 @@ void grab_key_button(xcb_keycode_t keycode, xcb_button_t button, uint16_t modfie
 
 void grab_key_button_checked(xcb_keycode_t keycode, xcb_button_t button, uint16_t modfield)
 {
+	// printf("%u\n", keycode);
 	xcb_generic_error_t *err;
 	if (button == XCB_NONE)
 		err = xcb_request_check(dpy, xcb_grab_key_checked(dpy, true, root, modfield, keycode, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC));
@@ -90,7 +91,7 @@ void grab_key_button_checked(xcb_keycode_t keycode, xcb_button_t button, uint16_
 			warn("error %u encountered.\n", err->error_code);
 		free(err);
 	} else {
-		PRINTF("grab %s %u %u\n", type, value, modfield);
+		// PRINTF("grab %s %u %u\n", type, value, modfield);
 	}
 }
 

@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 	setup();
 	get_standard_keysyms();
 	get_lock_fields();
-	abort_chord = make_chord(abort_keysym, XCB_NONE, 0, XCB_KEY_PRESS, false, false);
+	abort_chord = make_chord(abort_keysym, XCB_NONE, 0, 0, XCB_KEY_PRESS, false, false);
 	load_config(config_file);
 	for (int i = 0; i < num_extra_confs; i++)
 		load_config(extra_confs[i]);
@@ -271,7 +271,7 @@ void mapping_notify(xcb_generic_event_t *evt)
 		destroy_chord(abort_chord);
 		get_lock_fields();
 		reload_cmd();
-		abort_chord = make_chord(abort_keysym, XCB_NONE, 0, XCB_KEY_PRESS, false, false);
+		abort_chord = make_chord(abort_keysym, XCB_NONE, 0, 0, XCB_KEY_PRESS, false, false);
 		if (mapping_count > 0)
 			mapping_count--;
 	}

@@ -78,7 +78,7 @@ typedef struct {
 hotkey_t *find_hotkey(xcb_keysym_t keysym, xcb_button_t button, uint16_t modfield, uint8_t event_type, bool *replay_event);
 bool match_chord(chord_t *chord, uint8_t event_type, xcb_keysym_t keysym, xcb_button_t button, uint16_t modfield);
 bool chains_interfere(chain_t* a, chain_t* b);
-chord_t *make_chord(xcb_keysym_t keysym, xcb_button_t button, uint16_t modfield, uint8_t event_type, bool replay_event, bool lock_chain);
+chord_t *make_chord(xcb_keysym_t keysym, xcb_button_t button, xcb_keycode_t keycode, uint16_t modfield, uint8_t event_type, bool replay_event, bool lock_chain);
 void add_chord(chain_t *chain, chord_t *chord);
 chain_t *make_chain(void);
 cycle_t *make_cycle(int delay, int period);
