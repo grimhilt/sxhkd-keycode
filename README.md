@@ -1,3 +1,14 @@
+## sxhkd-keycode
+Implements the ability to define shortcuts by keycode, which is relevant when having two keyboards with different layouts.
+
+To do this, add a $ in front of the keycode in your sxhkdrc:
+
+	# super + q (in qwerty)
+	# super + a (in azerty)
+	super + $17
+		command
+
+I hope creating your shortcuts with the positions of your keys will be helpful.
 ## Description
 
 *sxhkd* is an X daemon that reacts to input events by executing commands.
